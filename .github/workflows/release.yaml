@@ -74,6 +74,9 @@ jobs:
 
       - name: Build image
         run: make image PLATFORM="${{ matrix.platform }}"
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
 
       - name: Inspect container image
         run: docker inspect "localhost:5000/$IMAGE_NAME" | jq -C .
