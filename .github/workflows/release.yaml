@@ -1,0 +1,189 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build
+
+    permissions:
+      id-token: write
+      contents: write
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+          - platform: linux/arm64
+            arch: arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare environment variables
+        run: cat .github/.env >> $GITHUB_ENV
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.6 # datasource=github-releases depName=golang/go
+
+      - name: Set up QEMU
+        if: contains(matrix.platform, 'linux/arm64')
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Configure AWS credentials
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+
+      - name: Login to Amazon ECR Public
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Calculate new version number
+        id: version
+        run: echo VERSION=$(make version) | tee -a $GITHUB_ENV | tee -a $GITHUB_OUTPUT
+
+      - name: Build image
+        run: make image PLATFORM="${{ matrix.platform }}"
+
+      - name: Inspect container image
+        run: docker inspect "localhost:5000/$IMAGE_NAME" | jq -C .
+
+      - name: Test image
+        run: make test-image PLATFORM="${{ matrix.platform }}"
+
+      - name: Push to DockerHub
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        run: make push DOCKER_REPO="${DOCKER_REPO}" PLATFORM="${{ matrix.platform }}"
+
+      - name: Push to Amazon ECR Public
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        run: make push DOCKER_REPO="${PUBLIC_ECR_REPO}" PLATFORM="${{ matrix.platform }}"
+
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+
+  tag:
+    name: Tag
+
+    needs: build
+
+    permissions:
+      id-token: write
+      contents: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare environment variables
+        run: cat .github/.env >> $GITHUB_ENV
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Configure AWS credentials
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+
+      - name: Login to Amazon ECR Public
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Reuse new version number
+        run: echo VERSION=${{ needs.build.outputs.version }} | tee -a $GITHUB_ENV
+
+      - name: Tag multiarch images for DockerHub
+        run: |
+          docker manifest create ${DOCKER_REPO}:v${VERSION} ${DOCKER_REPO}:v${VERSION}-linux-arm64 ${DOCKER_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${DOCKER_REPO}:v${VERSION}
+          docker manifest create ${DOCKER_REPO}:v${VERSION%.*} ${DOCKER_REPO}:v${VERSION}-linux-arm64 ${DOCKER_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${DOCKER_REPO}:v${VERSION%.*}
+          docker manifest create ${DOCKER_REPO}:v${VERSION%%.*} ${DOCKER_REPO}:v${VERSION}-linux-arm64 ${DOCKER_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${DOCKER_REPO}:v${VERSION%%.*}
+          docker manifest create ${DOCKER_REPO}:latest ${DOCKER_REPO}:v${VERSION}-linux-arm64 ${DOCKER_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${DOCKER_REPO}:latest
+
+      - name: Tag multiarch images for Amazon ECR Public
+        run: |
+          docker manifest create ${PUBLIC_ECR_REPO}:v${VERSION} ${PUBLIC_ECR_REPO}:v${VERSION}-linux-arm64 ${PUBLIC_ECR_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${PUBLIC_ECR_REPO}:v${VERSION}
+          docker manifest create ${PUBLIC_ECR_REPO}:v${VERSION%.*} ${PUBLIC_ECR_REPO}:v${VERSION}-linux-arm64 ${PUBLIC_ECR_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${PUBLIC_ECR_REPO}:v${VERSION%.*}
+          docker manifest create ${PUBLIC_ECR_REPO}:v${VERSION%%.*} ${PUBLIC_ECR_REPO}:v${VERSION}-linux-arm64 ${PUBLIC_ECR_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${PUBLIC_ECR_REPO}:v${VERSION%%.*}
+          docker manifest create ${PUBLIC_ECR_REPO}:latest ${PUBLIC_ECR_REPO}:v${VERSION}-linux-arm64 ${PUBLIC_ECR_REPO}:v${VERSION}-linux-amd64
+          docker manifest push ${PUBLIC_ECR_REPO}:latest
+
+  release:
+    name: Release
+
+    needs:
+      - tag
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch Git tags
+        run: git fetch --force --tags
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.6 # datasource=github-releases depName=golang/go
+
+      - name: Goreleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: 1.23.0 # datasource=github-releases depName=goreleaser/goreleaser
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
