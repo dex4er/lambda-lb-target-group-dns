@@ -1,0 +1,89 @@
+variables:
+  DOCKER_IO: docker.io
+
+stages:
+  - download
+  - release
+  - test
+
+download:
+  stage: download
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+-?.*$/
+  image: ghcr.io/supportpal/github-gh-cli
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - echo -e "\e[0Ksection_start:`date +%s`:wait\r\e[0KWait for release"
+    - |
+      while :; do
+        for i in $(seq 1 30); do
+          gh release view ${CI_COMMIT_TAG} -R dex4er/lambda-lb-target-group-dns && sleep 1m && break 2
+          sleep 10
+        done
+        exit 1
+      done
+    - echo -e "\e[0Ksection_end:`date +%s`:wait\r\e[0K"
+    #
+    - echo -e "\e[0Ksection_start:`date +%s`:download\r\e[0KDownload"
+    - gh release download -R dex4er/lambda-lb-target-group-dns -p '*' -D release
+    - echo -e "\e[0Ksection_end:`date +%s`:download\r\e[0K"
+    #
+    - echo -e "\e[0Ksection_start:`date +%s`:upload\r\e[0KUpload"
+    - cd release
+    - |
+      for f in *; do
+        curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$f" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/$f"
+      done
+    - echo -e "\e[0Ksection_end:`date +%s`:upload\r\e[0K"
+
+release:
+  stage: release
+  needs:
+    - download
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+-?.*$/
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  script:
+    - echo "Release $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: Release $CI_COMMIT_TAG
+    description: Downloaded from https://github.com/dex4er/lambda-lb-target-group-dns/releases/tag/$CI_COMMIT_TAG
+    assets:
+      links:
+        - name: checksums.txt
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/checksums.txt
+        - name: lambda-lb-target-group-dns-darwin-amd64
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/lambda-lb-target-group-dns-darwin-amd64
+        - name: lambda-lb-target-group-dns-darwin-arm64
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/lambda-lb-target-group-dns-darwin-arm64
+        - name: lambda-lb-target-group-dns-linux-amd64
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/lambda-lb-target-group-dns-linux-amd64
+        - name: lambda-lb-target-group-dns-linux-arm64
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/lambda-lb-target-group-dns-linux-arm64
+        - name: lambda-lb-target-group-dns-windows-amd64.exe
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/lambda-lb-target-group-dns-windows-amd64.exe
+        - name: lambda-lb-target-group-dns-windows-arm64.exe
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lambda-lb-target-group-dns/${CI_COMMIT_TAG}/lambda-lb-target-group-dns-windows-arm64.exe
+
+test:
+  stage: test
+  needs:
+    - job: release
+      optional: true
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+-?.*$/
+  image:
+    name: $DOCKER_IO/dex4er/lambda-lb-target-group-dns:$CI_COMMIT_TAG
+    entrypoint: [""]
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - echo -e "\e[0Ksection_start:`date +%s`:semver\r\e[0KDownload"
+    - lambda-lb-target-group-dns current
+    - lambda-lb-target-group-dns bump patch --prerelease
+    - lambda-lb-target-group-dns bump patch
+    - lambda-lb-target-group-dns bump minor
+    - lambda-lb-target-group-dns bump major
+    - echo -e "\e[0Ksection_end:`date +%s`:semver\r\e[0K"
