@@ -71,7 +71,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
-  
+
       - name: Calculate new version number
         id: version
         run: echo VERSION=$(make version) | tee -a $GITHUB_ENV | tee -a $GITHUB_OUTPUT
@@ -88,11 +88,11 @@ jobs:
       - name: Push to DockerHub
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         run: make push DOCKER_REPO="${DOCKER_REPO}" PLATFORM="${{ matrix.platform }}"
-  
+
       - name: Push to Amazon ECR Public
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         run: make push DOCKER_REPO="${PUBLIC_ECR_REPO}" PLATFORM="${{ matrix.platform }}"
-  
+
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
 
@@ -136,4 +136,3 @@ jobs:
         run: |
           docker manifest create ${PUBLIC_ECR_REPO}:v${VERSION} ${PUBLIC_ECR_REPO}:v${VERSION}-linux-arm64 ${PUBLIC_ECR_REPO}:v${VERSION}-linux-amd64
           docker manifest push ${PUBLIC_ECR_REPO}:v${VERSION}
-  
