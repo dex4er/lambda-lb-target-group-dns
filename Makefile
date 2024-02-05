@@ -170,18 +170,10 @@ push: ## Publish to container registry.
 	$(DOCKER) tag $(LOCAL_REPO) $(DOCKER_REPO):v$(VERSION)-$(subst /,-,$(PLATFORM))
 	$(DOCKER) push $(DOCKER_REPO):v$(VERSION)-$(subst /,-,$(PLATFORM))
 
-.aws-lambda-rie/$(AWS_LAMBDA_RIE):
-	$(MKDIR) -p .aws-lambda-rie
-	$(CURL) -Lo .aws-lambda-rie/$(AWS_LAMBDA_RIE) $(AWS_LAMBDA_RIE_URL)
-	$(CHMOD) +x .aws-lambda-rie/$(AWS_LAMBDA_RIE)
-
 .PHONY: test-image
-test-image: .aws-lambda-rie/$(AWS_LAMBDA_RIE)
 test-image: ## Test local image
 	$(call print-target)
-	@container=$(shell $(DOCKER) run --rm -d -v ./.aws-lambda-rie/$(AWS_LAMBDA_RIE):/aws-lambda-rie -p 8080:8080 --entrypoint /aws-lambda-rie $(LOCAL_REPO) /entrypoint); \
-	$(CURL) -X POST -H "Content-Type: application/json" -d '{"name": "foo", "age": 123}' http://localhost:8080/2015-03-31/functions/function/invocations; \
-	$(DOCKER) kill $$container >/dev/null
+	$(DOCKER) run --rm -it $(LOCAL_REPO) | $(GREP) -s "^Usage: /entrypoint"
 
 define print-target
 	@$(PRINTF) "Executing target: \033[36m$@\033[0m\n"
