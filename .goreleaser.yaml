@@ -21,9 +21,11 @@ builds:
       - -trimpath
 
 archives:
-  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+  - id: binary
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
     format: binary
-  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}.zip"
+  - id: zip
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}.zip"
     format: zip
     files:
       - LICENSE
