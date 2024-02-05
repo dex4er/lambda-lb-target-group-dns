@@ -19,6 +19,7 @@ import (
 type MyEvent struct {
 	TargetGroupArn string `json:"targetGroupArn"` // Target Group ARN
 	DomainName     string `json:"domainName"`     // Domain name
+	TargetPort     int64  `json:"targetPort"`     // Target port (default is to use traffic port)
 }
 
 type MyResponse struct {
@@ -64,12 +65,13 @@ func getTargetGroupIPs(svc *elbv2.ELBV2, targetGroupArn string) ([]string, error
 	return ipAddresses, nil
 }
 
-func registerTarget(svc *elbv2.ELBV2, targetGroupArn string, targetIP string) error {
+func registerTarget(svc *elbv2.ELBV2, targetGroupArn string, targetIP string, targetPort int64) error {
 	input := &elbv2.RegisterTargetsInput{
 		TargetGroupArn: aws.String(targetGroupArn),
 		Targets: []*elbv2.TargetDescription{
 			{
-				Id: aws.String(targetIP),
+				Id:   aws.String(targetIP),
+				Port: aws.Int64(targetPort),
 			},
 		},
 	}
@@ -78,12 +80,13 @@ func registerTarget(svc *elbv2.ELBV2, targetGroupArn string, targetIP string) er
 	return err
 }
 
-func deregisterTarget(svc *elbv2.ELBV2, targetGroupArn string, targetIP string) error {
+func deregisterTarget(svc *elbv2.ELBV2, targetGroupArn string, targetIP string, targetPort int64) error {
 	input := &elbv2.DeregisterTargetsInput{
 		TargetGroupArn: aws.String(targetGroupArn),
 		Targets: []*elbv2.TargetDescription{
 			{
-				Id: aws.String(targetIP),
+				Id:   aws.String(targetIP),
+				Port: aws.Int64(targetPort),
 			},
 		},
 	}
@@ -144,6 +147,11 @@ func HandleLambdaEvent(event *MyEvent) (*MyResponse, error) {
 		return nil, errors.New("target group type must be ip")
 	}
 
+	targetPort := event.TargetPort
+	if targetPort == 0 {
+		targetPort = *tg.Port
+	}
+
 	dnsIpAddresses, err := lookupIp(event.DomainName, *tg.IpAddressType)
 	if err != nil {
 		return nil, err
@@ -168,8 +176,8 @@ func HandleLambdaEvent(event *MyEvent) (*MyResponse, error) {
 
 	for _, ip := range dnsIpAddresses {
 		if _, exists := tgIpAddressesMap[ip]; !exists {
-			log.Printf("[DEBUG] Adding %s to Target Group %s", ip, *tg.TargetGroupName)
-			err := registerTarget(svc, event.TargetGroupArn, ip)
+			log.Printf("[DEBUG] Adding %s:%d to Target Group %s", ip, targetPort, *tg.TargetGroupName)
+			err := registerTarget(svc, event.TargetGroupArn, ip, targetPort)
 			if err != nil {
 				return nil, err
 			}
@@ -178,8 +186,8 @@ func HandleLambdaEvent(event *MyEvent) (*MyResponse, error) {
 
 	for _, ip := range tgIpAddresses {
 		if _, exists := dnsIpAddressesMap[ip]; !exists {
-			log.Printf("[DEBUG] Removing %s from Target Group %s", ip, *tg.TargetGroupName)
-			err := deregisterTarget(svc, event.TargetGroupArn, ip)
+			log.Printf("[DEBUG] Removing %s:%d from Target Group %s", ip, targetPort, *tg.TargetGroupName)
+			err := deregisterTarget(svc, event.TargetGroupArn, ip, targetPort)
 			if err != nil {
 				return nil, err
 			}
@@ -214,6 +222,7 @@ func main() {
 
 		flag.StringVar(&event.TargetGroupArn, "target-group-arn", "", "Target Group ARN")
 		flag.StringVar(&event.DomainName, "domain-name", "", "Domain name")
+		flag.Int64Var(&event.TargetPort, "target-port", 0, "Target port")
 
 		flag.Parse()
 

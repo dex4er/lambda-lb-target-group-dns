@@ -10,26 +10,53 @@
 AWS Lambda which registers IP addresses to the LB Target Group based on DNS
 record.
 
-!!! It is not ready to use yet !!!
-
 ## Usage
 
-```sh
-lambda-lb-target-group-dns
+Copy the container to your private ECR and use it as the container image or
+copy ZIP distribution and use it with an Amazon Linux 2023 runtime.
+
+Lambda accepts parameters:
+
+```json
+{
+  "targetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNTID:targetgroup/TARGETGROUP/NNN",
+  "domainName": "XXX.gr7.REGION.eks.amazonaws.com",
+  "targetPort": 0
+}
 ```
 
-### Docker
+Lambda returns the message:
+
+```json
+{
+  "message": "Registered IP addresses of domain XXX to Target Group XXX: [A.A.A.A, A.A.A.A]"
+}
+```
+
+You can test it as a standalone tool as:
+
+```sh
+lambda-lb-target-group-dns -target-group-arn XXX -domain-name XXX -target-port NNN
+```
+
+### Container image
+
+Copy the container to your private ECR:
 
 From DockerHub:
 
 ```sh
 docker pull dex4er/lambda-lb-target-group-dns
+docker tag dex4er/lambda-lb-target-group-dns ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
+docker push ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
 ```
 
 or from Amazon ECR Public:
 
 ```sh
 docker pull public.ecr.aws/dex4er/lambda-lb-target-group-dns
+docker tag public.ecr.aws/dex4er/lambda-lb-target-group-dns ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
+docker push ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
 ```
 
 Supported tags:
