@@ -79,12 +79,18 @@ This lambda function needs the following permissions:
     {
       "Effect": "Allow",
       "Action": [
-        "elasticloadbalancing:DeregisterTargets",
         "elasticloadbalancing:DescribeTargetGroups",
-        "elasticloadbalancing:DescribeTargetHealth",
-        "elasticloadbalancing:RegisterTargets"
+        "elasticloadbalancing:DescribeTargetHealth"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:RegisterTargets"
+      ],
+      "Resource": "arn:aws:elasticloadbalancing:REGION:ACCOUNTID:targetgroup/NAME/NNN"
     }
   ]
 }
