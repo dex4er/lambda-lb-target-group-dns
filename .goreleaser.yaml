@@ -7,7 +7,7 @@ before:
     - go mod download
 
 builds:
-  - binary: lambda-lb-target-group-dns
+  - binary: entrypoint
     env:
       - CGO_ENABLED=0
     goarch:
@@ -20,16 +20,14 @@ builds:
 
 archives:
   - id: binary
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "lambda-lb-target-group-dns-{{ .Os }}-{{ .Arch }}"
     format: binary
   - id: zip
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}.zip"
+    name_template: "lambda-lb-target-group-dns-{{ .Os }}-{{ .Arch }}"
     format: zip
     files:
       - LICENSE
       - README.md
-      - src: lambda-lb-target-group-dns
-        dst: entrypoint
 
 checksum:
   name_template: checksums.txt
