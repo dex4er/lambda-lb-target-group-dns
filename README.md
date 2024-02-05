@@ -25,11 +25,11 @@ Lambda accepts parameters:
 }
 ```
 
-Lambda returns the message:
+Lambda returns the status:
 
 ```json
 {
-  "message": "Registered IP addresses of domain XXX to Target Group XXX: [A.A.A.A, A.A.A.A]"
+  "status": "OK"
 }
 ```
 
@@ -46,17 +46,17 @@ Copy the container to your private ECR:
 From DockerHub:
 
 ```sh
-docker pull dex4er/lambda-lb-target-group-dns
-docker tag dex4er/lambda-lb-target-group-dns ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
-docker push ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
+docker pull dex4er/lambda-lb-target-group-dns:TAG
+docker tag dex4er/lambda-lb-target-group-dns:TAG ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns:TAG
+docker push ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns:TAG
 ```
 
 or from Amazon ECR Public:
 
 ```sh
-docker pull public.ecr.aws/dex4er/lambda-lb-target-group-dns
-docker tag public.ecr.aws/dex4er/lambda-lb-target-group-dns ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
-docker push ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns
+docker pull public.ecr.aws/dex4er/lambda-lb-target-group-dns:TAG
+docker tag public.ecr.aws/dex4er/lambda-lb-target-group-dns:TAG ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns:TAG
+docker push ACCOUNTID.dkr.ecr.REGION.amazonaws.com/dex4er/lambda-lb-target-group-dns:TAG
 ```
 
 Supported tags:
@@ -67,6 +67,28 @@ Supported tags:
 - vX.Y
 - vX
 - latest
+
+## IAM
+
+This lambda function needs the following permissions:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:DescribeTargetHealth",
+        "elasticloadbalancing:RegisterTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
 
 ## License
 
