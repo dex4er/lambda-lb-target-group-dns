@@ -173,7 +173,7 @@ push: ## Publish to container registry.
 .PHONY: test-image
 test-image: ## Test local image
 	$(call print-target)
-	$(DOCKER) run --rm -it $(LOCAL_REPO) | $(GREP) -s "^Usage: /entrypoint"
+	$(DOCKER) run --rm $(LOCAL_REPO) 2>&1 | $(GREP) -s "^Usage: /entrypoint"
 
 define print-target
 	@$(PRINTF) "Executing target: \033[36m$@\033[0m\n"
