@@ -23,7 +23,7 @@ type MyEvent struct {
 }
 
 type MyResponse struct {
-	Message string `json:"message"`
+	Status string `json:"status"`
 }
 
 func getTargetGroup(svc *elbv2.ELBV2, targetGroupARN string) (*elbv2.TargetGroup, error) {
@@ -199,13 +199,15 @@ func HandleLambdaEvent(event *MyEvent) (*MyResponse, error) {
 		return nil, err
 	}
 
-	return &MyResponse{Message: fmt.Sprintf("Registered IP addresses of domain %s to Target Group %s: %v", event.DomainName, *tg.TargetGroupName, tgIpAddresses2)}, nil
+	log.Printf("[DEBUG] Registered IP addresses of domain %s to Target Group %s: %v", event.DomainName, *tg.TargetGroupName, tgIpAddresses2)
+
+	return &MyResponse{Status: "OK"}, nil
 }
 
 func main() {
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel == "" {
-		logLevel = "TRACE"
+		logLevel = "DEBUG"
 	}
 
 	filter := &logutils.LevelFilter{
@@ -238,6 +240,6 @@ func main() {
 			log.Fatalf("[ERROR] %v", err)
 		}
 
-		log.Printf("[DEBUG] %v", response.Message)
+		log.Printf("[TRACE] response: %v", response.Status)
 	}
 }
