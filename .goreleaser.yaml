@@ -23,6 +23,13 @@ builds:
 archives:
   - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
     format: binary
+  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}.zip"
+    format: zip
+    files:
+      - LICENSE
+      - README.md
+      - src: lambda-lb-target-group-dns
+        dst: entrypoint
 
 checksum:
   name_template: checksums.txt
