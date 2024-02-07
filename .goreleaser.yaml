@@ -17,6 +17,7 @@ builds:
       - linux
     flags:
       - -trimpath
+      - -tags=lambda.norpc
 
 archives:
   - id: binary
