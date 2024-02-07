@@ -72,7 +72,7 @@ help:
 .PHONY: build
 build: ## Build app binary for single target
 	$(call print-target)
-	$(GO) build -trimpath -ldflags="-s -w -X main.version=$(VERSION)"
+	$(GO) build -tags lambda.norpc -trimpath -ldflags="-s -w -X main.version=$(VERSION)"
 
 .PHONY: goreleaser
 goreleaser: ## Build app binary for all targets
