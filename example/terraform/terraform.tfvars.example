@@ -1,0 +1,10 @@
+aws_profile = "default"
+aws_region  = "us-east-1"
+default_tags = {
+  ManagedBy = "Terraform"
+  Project   = "lambda-lb-target-group-dns"
+}
+domain_name    = "ABC1234.gr7.us-east-1.eks.amazonaws.com"
+target_port    = 443
+vpc_id         = "vpc-12345678"
+vpc_subnet_ids = ["subnet-12345678", "subnet-23456789", "subnet-34567890"]
