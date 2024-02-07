@@ -96,6 +96,11 @@ This lambda function needs the following permissions:
 }
 ```
 
+## Example
+
+See [example/terraform](example/terraform) directory for an example how to
+use this lambda function.
+
 ## License
 
 The MIT License (MIT)
