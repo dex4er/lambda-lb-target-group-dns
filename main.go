@@ -26,6 +26,11 @@ type MyResponse struct {
 	Status string `json:"status"`
 }
 
+var (
+	name    = "lambda-lb-target-group-dns"
+	version = "dev"
+)
+
 func getTargetGroup(svc *elbv2.ELBV2, targetGroupARN string) (*elbv2.TargetGroup, error) {
 	input := &elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: []*string{
@@ -211,11 +216,13 @@ func main() {
 	}
 
 	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"TRACE", "DEBUG", "ERROR"},
+		Levels:   []logutils.LogLevel{"TRACE", "DEBUG", "INFO", "ERROR"},
 		MinLevel: logutils.LogLevel(logLevel),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(filter)
+
+	fmt.Println(name, version)
 
 	if _, exist := os.LookupEnv("AWS_LAMBDA_RUNTIME_API"); exist {
 		lambda.Start(HandleLambdaEvent)
@@ -229,7 +236,7 @@ func main() {
 		flag.Parse()
 
 		if event.TargetGroupArn == "" || event.DomainName == "" {
-			fmt.Printf("Usage: %s\n\n", os.Args[0])
+			fmt.Printf("\nUsage: %s\n\n", os.Args[0])
 			flag.PrintDefaults()
 			os.Exit(2)
 		}
