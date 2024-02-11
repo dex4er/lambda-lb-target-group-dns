@@ -10,28 +10,6 @@ builds:
   - binary: bootstrap
     env:
       - CGO_ENABLED=0
-    goarch:
-      - amd64
-      - arm64
-    goos:
-      - linux
     flags:
       - -trimpath
       - -tags=lambda.norpc
-
-archives:
-  - id: binary
-    name_template: "lambda-lb-target-group-dns-{{ .Os }}-{{ .Arch }}"
-    format: binary
-  - id: zip
-    name_template: "lambda-lb-target-group-dns-{{ .Os }}-{{ .Arch }}"
-    format: zip
-    files:
-      - LICENSE
-      - README.md
-
-checksum:
-  name_template: checksums.txt
-
-changelog:
-  use: github
