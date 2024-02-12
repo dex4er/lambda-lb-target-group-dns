@@ -70,6 +70,30 @@ docker_manifests:
     image_templates:
       - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
       - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
+  - name_template: "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
+      - "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
+  - name_template: "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
+      - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
+  - name_template: "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Major }}"
+    image_templates:
+      - "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
+      - "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
+  - name_template: "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Major }}"
+    image_templates:
+      - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
+      - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
+  - name_template: docker.io/dex4er/lambda-lb-target-group-dns:latest
+    image_templates:
+      - "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
+      - "docker.io/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
+  - name_template: public.ecr.aws/dex4er/lambda-lb-target-group-dns:latest
+    image_templates:
+      - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-amd64"
+      - "public.ecr.aws/dex4er/lambda-lb-target-group-dns:v{{ .Version }}-linux-arm64"
 
 checksum:
   name_template: checksums.txt
