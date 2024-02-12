@@ -222,7 +222,11 @@ func main() {
 	}
 	log.SetOutput(filter)
 
-	fmt.Println(name, version)
+	if version == "dev" {
+		fmt.Println(name, version)
+	} else {
+		fmt.Printf("%s v%s\n", name, version)
+	}
 
 	if _, exist := os.LookupEnv("AWS_LAMBDA_RUNTIME_API"); exist {
 		lambda.Start(HandleLambdaEvent)
