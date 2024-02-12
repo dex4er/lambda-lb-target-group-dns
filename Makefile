@@ -44,9 +44,6 @@ BINDIR = /usr/local/bin
 endif
 endif
 
-CGO_ENABLED = 0
-export CGO_ENABLED
-
 .PHONY: help
 help:
 	@echo Targets:
@@ -56,16 +53,6 @@ help:
 build: ## Build app binary for single target
 	$(call print-target)
 	$(GORELEASER) build --clean --snapshot --id build --single-target --output $(BIN)
-
-.PHONY: snapshot
-snapshot: ## Build and publish the snapshot
-	$(call print-target)
-	$(GORELEASER) release --config=.goreleaser-snapshot.yaml --clean --skip=announce
-
-.PHONY: release
-release: ## Build and publish the new release
-	$(call print-target)
-	$(GORELEASER) release --config=.goreleaser-release.yaml --clean
 
 $(BIN):
 	@$(MAKE) build
