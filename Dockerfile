@@ -1,6 +1,6 @@
 FROM goreleaser/goreleaser:v1.24.0 AS goreleaser
 
-FROM golang:1.21.6 AS build
+FROM golang:1.22.0 AS build
 
 WORKDIR /src
 
