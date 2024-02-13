@@ -1,6 +1,6 @@
 module "security_group_lambda" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   name        = "${var.name}-lambda"
   description = "Security Group for Lambda Egress"
