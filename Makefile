@@ -52,7 +52,7 @@ help:
 .PHONY: build
 build: ## Build app binary for single target
 	$(call print-target)
-	$(GORELEASER) build --clean --snapshot --id build --single-target --output $(BIN)
+	$(GORELEASER) build --clean --snapshot --single-target --output $(BIN)
 
 $(BIN):
 	@$(MAKE) build
