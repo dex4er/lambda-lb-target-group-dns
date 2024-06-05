@@ -59,7 +59,7 @@ jobs:
           registry-type: public
 
       - name: Goreleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: 1.24.0 # datasource=github-releases depName=goreleaser/goreleaser
