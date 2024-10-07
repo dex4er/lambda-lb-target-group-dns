@@ -19,8 +19,8 @@ module "lambda_function" {
 
   function_name = var.name
   description   = "AWS Lambda which registers IP addresses to the LB Target Group based on DNS record"
-  runtime       = "provided.al2023"
-  handler       = "bootstrap"
+  runtime       = "python3.12"
+  handler       = "lambda_lb_target_group_dns.lambda_function.lambda_handler"
   architectures = ["arm64"]
 
   timeout = 120
@@ -36,7 +36,7 @@ module "lambda_function" {
 
   create_package         = false
   package_type           = "Zip"
-  local_existing_package = "../../dist/lambda-lb-target-group-dns-linux-arm64.zip"
+  local_existing_package = "../../package.zip"
 
   tags = {
     Name = var.name

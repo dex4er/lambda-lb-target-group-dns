@@ -1,0 +1,56 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - "**"
+    paths-ignore:
+      - .bandit
+      - .editorconfig
+      - .gitignore
+      - .markdownlint.yaml
+      - .renovaterc.json
+      - .trunk/**
+      - .yamllint.yaml
+      - LICENSE
+      - README.md
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    name: Test
+
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v3
+
+      - name: Configure poetry
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+
+      - name: Use cache
+        uses: actions/cache@v4
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Build lambda
+        run: python build-lambda.py
+
+      - name: Test lambda
+        run: poetry run python -m lambda_lb_target_group_dns A B 2>&1 | grep "Unable to locate credentials."

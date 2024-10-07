@@ -7,9 +7,9 @@ Lambda for updating the targets.
 
 Create `terraform.tfvars` based on example file.
 
-Run `goreleaser release --snapshot` from the top directory to get ZIP files then:
+Run `python build-lambda.py` from the top directory to get ZIP files then:
 
 ```sh
-terraform init
-terraform apply
+tofu init
+tofu apply
 ```

@@ -12,13 +12,19 @@ tmp/
 *.exe
 *.exe~
 *.dll
-*.so
 *.dylib
+*.pyc
+*.so
 
 *.test
 
 *.out
 
-go.work
+.mypy_cache
+.venv
+__pycache__
+dist
+package
+package.zip
 
 .vscode/
