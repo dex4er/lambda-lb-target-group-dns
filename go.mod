@@ -1,9 +1,9 @@
 module github.com/dex4er/lambda-lb-target-group-dns
 
-go 1.21
+go 1.26
 
 require (
-	github.com/aws/aws-lambda-go v1.46.0
+	github.com/aws/aws-lambda-go v1.55.0
 	github.com/aws/aws-sdk-go v1.50.10
 	github.com/hashicorp/logutils v1.0.0
 )
