@@ -71,7 +71,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
-          version: 1.24.0 # datasource=github-releases depName=goreleaser/goreleaser
+          version: 2.18.1 # datasource=github-releases depName=goreleaser/goreleaser
           args: release --config=.goreleaser-release.yaml --clean --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
