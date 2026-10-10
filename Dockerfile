@@ -1,4 +1,4 @@
-FROM goreleaser/goreleaser:v1.24.0 AS goreleaser
+FROM goreleaser/goreleaser:v2.18.3 AS goreleaser
 
 FROM golang:1.21.6 AS build
 
